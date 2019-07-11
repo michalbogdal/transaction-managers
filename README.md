@@ -1,14 +1,14 @@
 #### **_Transactions... my friends._**
 
-**Transaction managers** are responsible as name suggest for managing transactions. They decides if a new transaction should be created, if they should join to already created one and if it should be committed or rollback.
+**Transaction managers** are responsible as name suggest for managing transactions. They decides if a new transaction should be created, maybe joined to already created one or if in the end we should commit or rollback changes.
 
 Spring provides one common abstraction for Transaction Managers:  **PlatformTransactionManager**, thanks to it the source code doesn't need to be aware of particular manager, so there is no need for any changes when transaction manager is replaced. 
 
 Different implementation deals with different abstractions: session factory  (hibernate), entity manager (jpa), datasource (jdbc) etc. 
 Sometimes they can handle couple of resources under same transaction like JDBC and ORM, this is only possible if they **share the same connection** to database.
 
-If we have different resources (database and JMS), or many databases (oracle, mysql etc) only one option to have atomic transaction is to use JtaTransactionManager and _two phase commit_
-
+If we have different resources (database and JMS), or many databases (oracle, mysql etc) only one option to have global atomic transaction (XA) is to use JtaTransactionManager and _two phase commit_.
+Of course it depends on particular system if we really need that kind of semantics, or maybe other approach would be sufficient as well.
 
 Declarative approach by using **@Transactional** annotation, makes the transaction handling stuff fully transparent.
 
@@ -27,7 +27,7 @@ platformTransactionManager.commit(transaction);
 platformTransactionManager.rollback(transaction);
 
 ```
-and PlatformTransactionManager could be any transaction manager (jta, jpa, hibernate, datasource, rabbit etc)
+and PlatformTransactionManager can implement any transaction manager (jta, jpa, hibernate, datasource, rabbit etc)
 
 
 transaction can be also handled on lower levels:
@@ -54,10 +54,11 @@ From transactional point of view **TransactionSynchronizationManager** is quite 
 It is kind of the central storage for resources and connections.
 It is also quite good as starting point for **debugging**.
 
-Test cases written here presents different configuration of transaction managers, mixed resources etc.
+------------------
 
 
-Transaction managers brief summary:
+
+_Brief **summary** for transaction managers:_
 
 * **JtaTransactionManager** (JTA)  - enterprise usage (in most cases delegated to application server)
     * many DataSources -> Connections
@@ -78,3 +79,14 @@ Transaction managers brief summary:
     
 * **RabbitTransactionManager**  (Rabbit message broker)  
     * ConnectionFactory
+    
+* others ...    
+    
+    
+    
+------------------   
+   
+
+##### Please see the source code and test cases which presents different configuration of transaction managers with mixed resources etc.
+
+    
