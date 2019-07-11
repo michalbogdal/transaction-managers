@@ -117,6 +117,46 @@ public class DataSourceTransactionManagerTest extends AbstractManagerTest {
     }
 
     @Test
+    public void shouldSaveEventsInNewTransactions() {
+        TransactionStatus transaction = platformTransactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        jdbcEventRepository.save(new Event(2L, "AAAA"));
+
+        DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
+        definition.setPropagationBehaviorName("PROPAGATION_REQUIRES_NEW");
+        TransactionStatus newTransaction = platformTransactionManager.getTransaction(definition);
+
+        jdbcEventRepository.save(new Event(25L, "BBBBB"));
+
+        //order is important, otherwise it will fail
+        platformTransactionManager.commit(newTransaction);
+        platformTransactionManager.commit(transaction);
+
+        List<Event> events = jdbcEventRepository.findAll();
+        assertThat(events).hasSize(2);
+    }
+
+    @Test
+    public void shouldRollbackOnlyNestedTransaction() {
+        TransactionStatus transaction = platformTransactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        jdbcEventRepository.save(new Event(2L, "AAAA"));
+
+        DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
+        definition.setPropagationBehaviorName("PROPAGATION_REQUIRES_NEW");
+        TransactionStatus newTransaction = platformTransactionManager.getTransaction(definition);
+
+        jdbcEventRepository.save(new Event(25L, "BBBBB"));
+
+        platformTransactionManager.rollback(newTransaction);
+        platformTransactionManager.commit(transaction);
+
+        List<Event> events = jdbcEventRepository.findAll();
+        assertThat(events).hasSize(1);
+        assertThat(events).extracting("description").containsExactly("AAAA");
+    }
+
+    @Test
     public void shouldRollbackAllChanges() {
         TransactionStatus transaction = platformTransactionManager.getTransaction(new DefaultTransactionDefinition());
 
