@@ -1,14 +1,16 @@
 #### **_Transactions... my friends._**
 
-**Transaction managers** are responsible as name suggest for managing transactions. They decides if a new transaction should be created, maybe joined to already created one or if in the end we should commit or rollback changes.
+**Transaction managers** have similar goals, to bound treads with resources and decide if a new transaction should be created, previous suspended, or maybe to continue already created one. 
+Apart from this they make a final decision if transaction should be committed or rollback.
 
-Spring provides one common abstraction for Transaction Managers:  **PlatformTransactionManager**, thanks to it the source code doesn't need to be aware of particular manager, so there is no need for any changes when transaction manager is replaced. 
+**Spring framework** provides one common abstraction for Transaction Managers:  **PlatformTransactionManager**, thanks to it the source code doesn't need to be aware of particular manager, so there is no need for any changes when transaction manager is replaced. 
 
-Different implementation deals with different abstractions: session factory  (hibernate), entity manager (jpa), datasource (jdbc) etc. 
+Different implementations deals with different abstractions: session factory  (hibernate), entity manager (jpa), datasource (jdbc) etc. 
 Sometimes they can handle couple of resources under same transaction like JDBC and ORM, this is only possible if they **share the same connection** to database.
 
 If we have different resources (database and JMS), or many databases (oracle, mysql etc) only one option to have global atomic transaction (XA) is to use JtaTransactionManager and _two phase commit_.
-Of course it depends on particular system if we really need that kind of semantics, or maybe other approach would be sufficient as well.
+ The question should be if we really need it. It depends on particular system and requirements. Always it is a matter of trade off.
+ Good alternative could be "_Best effort 1pc_" (see links), transaction compensation and other patterns of distributed transactions.
 
 Declarative approach by using **@Transactional** annotation, makes the transaction handling stuff fully transparent.
 
@@ -27,10 +29,10 @@ platformTransactionManager.commit(transaction);
 platformTransactionManager.rollback(transaction);
 
 ```
-and PlatformTransactionManager can implement any transaction manager (jta, jpa, hibernate, datasource, rabbit etc)
+and there is many PlatformTransactionManager implementation for instance (jta, jpa, hibernate, datasource, weblogic, rabbit etc)
 
 
-transaction can be also handled on lower levels:
+We can also go lower and handle transaction on datasource or sessionFactory level:
 ```java
 TransactionSynchronizationManager.initSynchronization();
 Connection connection = DataSourceUtils.getConnection(dataSource);
@@ -50,9 +52,16 @@ transaction.commit();
 transaction.rollback();
 ```
 
-From transactional point of view **TransactionSynchronizationManager** is quite important. 
+------------------
+
+One common place used by transaction managers, resources and any logic which is aware of transaction is **TransactionSynchronizationManager**. 
 It is kind of the central storage for resources and connections.
 It is also quite good as starting point for **debugging**.
+
+For instance:
+* if method is annotated with @Transactional, transaction manager can store initialized transaction there, suspend the current one etc.
+* Resource like jdbcTemplate, rabbitTemplate etc can also initialize transaction by itself or synchronize with already created one.
+* any code can also synchronize some logic with transaction (e.g. to postpone logic until transaction is committed) 
 
 ------------------
 
@@ -90,3 +99,8 @@ _Brief **summary** for transaction managers:_
 ##### Please see the source code and test cases which presents different configuration of transaction managers with mixed resources etc.
 
     
+------------------
+
+Very good info about transactions:
+https://www.javaworld.com/article/2077963/distributed-transactions-in-spring--with-and-without-xa.html
+https://docs.spring.io/spring/docs/4.2.x/spring-framework-reference/html/transaction.html
