@@ -102,5 +102,7 @@ _Brief **summary** for transaction managers:_
 ------------------
 
 Very good info about transactions:
+
 https://www.javaworld.com/article/2077963/distributed-transactions-in-spring--with-and-without-xa.html
+
 https://docs.spring.io/spring/docs/4.2.x/spring-framework-reference/html/transaction.html
