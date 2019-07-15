@@ -1,5 +1,6 @@
 package com.transactions.playground.transactionsdemo;
 
+import com.transactions.playground.transactionsdemo.model.Event;
 import org.junit.After;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -10,6 +11,9 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.HashSet;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class AbstractManagerTest {
 
@@ -35,8 +39,10 @@ public class AbstractManagerTest {
     }
 
     private void cleanDatabaseData() throws SQLException {
-        TransactionStatus transaction = platformTransactionManager.getTransaction(new DefaultTransactionDefinition());
         dataSource.getConnection().prepareStatement("delete from event").executeUpdate();
-        platformTransactionManager.commit(transaction);
+    }
+
+    public void assertEvents(List<Event> events, String ... descriptions) {
+        assertThat(events).extracting("description").containsExactly(descriptions);
     }
 }

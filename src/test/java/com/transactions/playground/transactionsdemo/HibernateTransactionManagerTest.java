@@ -86,11 +86,11 @@ public class HibernateTransactionManagerTest extends AbstractManagerTest {
 
         List<Event> jdbcEvents = jdbcEventRepository.findAll();
         assertThat(jdbcEvents).hasSize(1);
-        assertThat(jdbcEvents).extracting("description").containsExactly(eventOne.getDescription());
+        assertEvents(jdbcEvents, eventOne.getDescription());
 
         List<Event> hibernateEvent = sessionEventRepository.findAll();
         assertThat(hibernateEvent).hasSize(1);
-        assertThat(hibernateEvent).extracting("description").containsExactly(eventOne.getDescription());
+        assertEvents(hibernateEvent, eventOne.getDescription());
     }
 
     @Test
@@ -122,7 +122,7 @@ public class HibernateTransactionManagerTest extends AbstractManagerTest {
 
         List<Event> eventsAfterRollback = sessionEventRepository.findAll();
         assertThat(eventsAfterRollback).hasSize(1);
-        assertThat(eventsAfterRollback).extracting("description").containsExactly(eventTwo.getDescription());
+        assertEvents(eventsAfterRollback, eventTwo.getDescription());
     }
 
     @Test

@@ -11,8 +11,12 @@ import java.util.List;
 @Repository
 public class JDBCEventRepository implements EventRepo {
 
-    @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    public JDBCEventRepository(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
     @Override
     public Event save(Event event) {

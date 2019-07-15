@@ -60,9 +60,9 @@ It is also quite good as starting point for **debugging**.
 
 For instance:
 * if method is annotated with @Transactional, transaction manager begin the transaction (sets some flags, initializes collections, bounds threads with connections) - e.g. in case of HibernateTransactionManager it stores connection for DataSource and Session for SessionFactory, so anyone can reuse them to be in the same transaction.
-* Resources like *Template (jdbcTemplate, rabbitTemplate, jmsTemplate etc) synchronize themselves with already started transaction. What I mean by synchronizing, in case of jdbcTemplate:
-    * jdbcTemplate checks if dataSource is already associated with transaction (registered) to reuse the connection - if so nothing happens since it is already under same transaction
-    * if dataSource is not associated with transaction, jdbcTemplate creates new connection for this dataStore and register it. New connection, means new transaction so now we have at least two separate transactions. For this case jdbcTempate also register synchronization logic - in most cases, commit if current transaction is also committed, otherwise rollback (but jdbc commit failure will not rollback already committed transaction)
+* Resources like *Template (jdbcTemplate, rabbitTemplate, jmsTemplate etc) synchronize themselves with already started transaction. What I mean by synchronizing, in case of e.g. rabbitTemplate:
+    * rabbitTemplate checks if connectionFactory is already associated with transaction (registered) to reuse the connection - if so nothing happens since it is already under same transaction
+    * if connectionFactory is not associated with transaction, rabbitTemplate creates new connection for this connectionFactory and register it. New connection, means new transaction so now we have at least two separate transactions. For this case rabbitTempate also register synchronization logic - in most cases, commit if current transaction is also committed, otherwise rollback (but message broker commit failure will not rollback already committed transaction)
 * any code can also synchronize some logic with transaction (e.g. to postpone logic until transaction is committed) or force rollback
 
 ------------------
@@ -78,7 +78,7 @@ _Brief **summary** for transaction managers:_
     * DataSource -> Connection
 
 * **JpaTransactionManager** (JPA) - e.g. both plain SQL and hibernate
-    * EntityManager -> DataSource -> connection
+    * EntityManagerFactory -> DataSource -> connection
     * DataSource -> connection
     
 * **HibernateTransactionManager** (Hibernate)  - e.g. both plain SQL and hibernate
@@ -94,7 +94,26 @@ _Brief **summary** for transaction managers:_
 * others ...    
     
     
+------------------
+
+###### **Q & A**
+
+This is kind of summary but presented in different way - as a questions and answers.
+
+1) If I use jdbc, which transaction manager could I use
+    * all transaction managers which support dataSource would work: DataSourceTransactionManager, HibernateTransactionManager, JpaTransactionManager etc however it make sense to use DataSourceTransactionManager (YAGNI - most tailor made for a given scenario) 
     
+2) what would happen if I configure JpaTransactionManager **without adding dataSource or entityManagerFactory** to it?    
+    * it would fail, since entityManagerFactory is required
+
+3) what would happen if I configure JpaTransactionManager **only without dataSource** (with entityManagerFactory) 
+    * transaction manager would take dataSource from entityManagerFactory   
+    
+4) what would happen if I configure JpaTransactionManager **with different dataSource** (different than used by entityManager)
+    * any dataSource configured will be overwritten by dataSource provided by entityManagerFactory (e.g. by hibernate implementation). Two dataSources will be in two separate transactions, but the second one will not be committed after the first one (Please see _org.springframework.jdbc.datasource.DataSourceUtils.doGetConnection_ and _ConnectionSynchronization_) 
+    
+5) what would happen if I create two instances of dataSource pointing to the same database?
+    * they will be anyway in two transactions (if dataSource.equals(dataSource2) == false)     
 ------------------   
    
 

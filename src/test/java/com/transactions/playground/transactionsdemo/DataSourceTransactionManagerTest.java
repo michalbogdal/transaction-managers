@@ -153,7 +153,7 @@ public class DataSourceTransactionManagerTest extends AbstractManagerTest {
 
         List<Event> events = jdbcEventRepository.findAll();
         assertThat(events).hasSize(1);
-        assertThat(events).extracting("description").containsExactly("AAAA");
+        assertEvents(events, "AAAA");
     }
 
     @Test
@@ -181,14 +181,14 @@ public class DataSourceTransactionManagerTest extends AbstractManagerTest {
 
         List<Event> jdbcEvents = jdbcEventRepository.findAll();
         assertThat(jdbcEvents).hasSize(1);
-        assertThat(jdbcEvents).extracting("description").containsExactly(eventOne.getDescription());
+        assertEvents(jdbcEvents, eventOne.getDescription());
 
         /*
          * after commit JPA return entry persisted by JDBC repository
          */
         List<Event> jpaEvents = jpaEventRepository.findAll();
         assertThat(jpaEvents).hasSize(1);
-        assertThat(jpaEvents).extracting("description").containsExactly(eventOne.getDescription());
+        assertEvents(jpaEvents, eventOne.getDescription());
     }
 
     @Test

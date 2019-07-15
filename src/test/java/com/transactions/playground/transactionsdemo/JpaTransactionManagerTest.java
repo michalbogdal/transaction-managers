@@ -32,11 +32,12 @@ public class JpaTransactionManagerTest {
         @Bean
         public PlatformTransactionManager transactionManager() {
             JpaTransactionManager transactionManager = new JpaTransactionManager();
-            transactionManager.setDataSource(dataSource());
+            //transactionManager.setDataSource(dataSource());
             transactionManager.setEntityManagerFactory(entityManagerFactory().getObject());
             transactionManager.setJpaProperties(hibernateProperties());
             return transactionManager;
         }
+
     }
 
     @Autowired
@@ -86,7 +87,10 @@ public class JpaTransactionManagerTest {
 
         platformTransactionManager.rollback(transaction);
 
-        List<Event> events = jdbcEventRepository.findAll();
-        assertThat(events).isEmpty();
+        List<Event> rollbackJdbcEvents = jdbcEventRepository.findAll();
+        assertThat(rollbackJdbcEvents).isEmpty();
+
+        List<Event> rollbackJpaEvents = jpaEventRepository.findAll();
+        assertThat(rollbackJpaEvents).isEmpty();
     }
 }
