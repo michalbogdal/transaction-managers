@@ -61,8 +61,10 @@ It is also quite good as starting point for **debugging**.
 For instance:
 * if method is annotated with @Transactional, transaction manager begin the transaction (sets some flags, initializes collections, bounds threads with connections) - e.g. in case of HibernateTransactionManager it stores connection for DataSource and Session for SessionFactory, so anyone can reuse them to be in the same transaction.
 * Resources like *Template (jdbcTemplate, rabbitTemplate, jmsTemplate etc) synchronize themselves with already started transaction. What I mean by synchronizing, in case of e.g. rabbitTemplate:
-    * rabbitTemplate checks if connectionFactory is already associated with transaction (registered) to reuse the connection - if so nothing happens since it is already under same transaction
-    * if connectionFactory is not associated with transaction, rabbitTemplate creates new connection for this connectionFactory and register it. New connection, means new transaction so now we have at least two separate transactions. For this case rabbitTempate also register synchronization logic - in most cases, commit if current transaction is also committed, otherwise rollback (but message broker commit failure will not rollback already committed transaction)
+    * **rabbitTemplate** checks if connectionFactory is already associated with transaction (registered) to reuse the connection - if so nothing happens since it is already under same transaction
+    * if **connectionFactory** is not associated with transaction, **rabbitTemplate** creates new connection for this connectionFactory and register it. New connection, means new transaction so now we have at least two separate transactions. For this case rabbitTemplate also register synchronization logic - in most cases, commit if current transaction is also committed, otherwise rollback (but message broker commit failure will not rollback already committed transaction)
+    
+    Please see _org.springframework.amqp.rabbit.connection.ConnectionFactoryUtils#bindResourceToTransaction_ and _RabbitResourceSynchronization_.
 * any code can also synchronize some logic with transaction (e.g. to postpone logic until transaction is committed) or force rollback
 
 ------------------
